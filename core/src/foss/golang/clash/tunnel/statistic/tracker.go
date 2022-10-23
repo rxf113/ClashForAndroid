@@ -10,6 +10,9 @@ import (
 	"go.uber.org/atomic"
 )
 
+//创建websocket client
+//
+
 type tracker interface {
 	ID() string
 	Close() error
@@ -41,6 +44,16 @@ func (tt *tcpTracker) Read(b []byte) (int, error) {
 	download := int64(n)
 	tt.manager.PushDownloaded(download)
 	tt.DownloadTotal.Add(download)
+
+	tt.Metadata.RemoteAddress()
+
+	//发送数据到 websocket server
+	dto := new(Dto)
+	dto.Download = download
+	dto.RemoteAddress = tt.Metadata.RemoteAddress()
+	dto.ExitTime = time.Now().Unix()
+	SendMsg(dto)
+
 	return n, err
 }
 
